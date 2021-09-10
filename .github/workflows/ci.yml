@@ -1,10 +1,10 @@
 on: [push, pull_request]
 
-name: CI (Android Only)
+name: CI
 
 jobs:
   build:
-    name: Compile and Build (Android, iOS)
+    name: Compile and Build
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -60,17 +60,17 @@ jobs:
       - name: Run Flutter pub get
         run: flutter pub get
 
-      - name: Set up JDK 1.8 (Android only)
+      - name: Set up JDK 1.8 
         uses: actions/setup-java@v1
         
         with:
           java-version: 1.8
 
-      - name: Setup Android SDK (Android only)
+      - name: Setup Android SDK 
         
         uses: android-actions/setup-android@v2
 
-      - name: Cache NDK (Android only)
+      - name: Cache NDK 
         
         id: cache-ndk
         uses: actions/cache@v2
@@ -78,15 +78,14 @@ jobs:
           path: /home/runner/android/ndk-bundle
           key: ${{ runner.os }}-ndk
 
-      - name: Install Android NDK (Android only)
+      - name: Install Android NDK 
         if: steps.cache-ndk.outputs.cache-hit != 'true' && matrix.os == 'ubuntu-latest'
         run: $ANDROID_SDK_ROOT/tools/bin/sdkmanager ndk-bundle
 
-      - name: Set Android NDK Env (Android only)
-        
+      - name: Set Android NDK Env 
         run: echo 'name=ANDROID_NDK_HOME::/home/runner/android/ndk-bundle' >> $GITHUB_ENV
 
-      - name: Install Android Targets (Android only)
+      - name: Install Android Targets 
         run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
       - name: Run cargo make android
@@ -98,3 +97,8 @@ jobs:
 
       - name: Build APK (Fat, Debug)
         run: flutter build apk --debug --no-sound-null-safety
+      - name: Save APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: flab-debug
+          path: build/app/outputs/flutter-apk/app-debug.apk
