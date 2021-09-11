@@ -1,68 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:adder/adder.dart';
+import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() => runApp(MyApp());
+class CounterObserver extends BlocObserver {
+  @override
+  void onChange(BlocBase bloc, Change change) {
+    super.onChange(bloc, change);
+    print('${bloc.runtimeType} $change');
+  }
+}
 
-class MyApp extends StatelessWidget {
+void main() {
+  Bloc.observer = CounterObserver();
+  runApp(const CounterApp());
+}
+
+class CounterApp extends MaterialApp {
+  /// {@macro counter_app}
+  const CounterApp({Key? key}) : super(key: key, home: const CounterPage());
+}
+
+class CounterPage extends StatelessWidget {
+  /// {@macro counter_page}
+  const CounterPage({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+    return BlocProvider(
+      create: (_) => CounterCubit(),
+      child: CounterView(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  Adder adder = Adder();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
+class CounterView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: const Text('Counter')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            )
-          ],
+        child: BlocBuilder<CounterCubit, int>(
+          builder: (context, state) {
+            return Text('$state', style: textTheme.headline2);
+          },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          FloatingActionButton(
+            key: const Key('counterView_increment_floatingActionButton'),
+            child: const Icon(Icons.add),
+            onPressed: () => context.read<CounterCubit>().increment(),
+          ),
+          const SizedBox(height: 8),
+          FloatingActionButton(
+            key: const Key('counterView_decrement_floatingActionButton'),
+            child: const Icon(Icons.remove),
+            onPressed: () => context.read<CounterCubit>().decrement(),
+          ),
+        ],
       ),
     );
   }
+}
 
-  void _incrementCounter() {
-    setState(() {
-      _counter = adder.add(_counter, 1);
-    });
-  }
+class CounterCubit extends Cubit<int> {
+  Adder adder = Adder();
+
+  /// {@macro counter_cubit}
+  CounterCubit() : super(0);
+
+  /// Add 1 to the current state.
+  void increment() => emit(adder.add(state, 1));
+
+  /// Subtract 1 from the current state.
+  void decrement() => emit(adder.add(state, -1));
 }

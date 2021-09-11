@@ -12,6 +12,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
+  flutter_bloc: ^7.2.0
+  bloc: ^7.1.0
 
   adder:
     path: packages/adder_ffi
